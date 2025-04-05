@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-golang
+spec:
+  selector:
+    matchLabels:
+      app: backend-golang
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: backend-golang
+    spec:
+      containers:
+      - name: backend-golang
+        image: ghcr.io/pvico12/backend-golang:latest
+        ports:
+        - containerPort: 3500
+        env:
+        - name: POSTGRES_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_DEV_DATABASE
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_DEV_ADMIN_USERNAME
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_DEV_ADMIN_PASSWORD
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_DEV_HOST_NAME
+        - name: POSTGRES_PORT
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_DEV_HOST_PORT
+        - name: POSTGRES_SSLMODE
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: POSTGRES_DEV_SLLMODE
+        - name: POSTGRES_CERTIFICATE_PATH
+          value: "postgres-db-cert.crt"
+        volumeMounts:
+        - name: ca-cert-volume
+          mountPath: "/root/postgres-db-cert.crt"
+          subPath: postgres-db-cert.crt
+      volumes:
+      - name: ca-cert-volume
+        secret:
+          secretName: prod-postgres-ca-cert
+          items:
+          - key: postgres-db-cert.crt
+            path: postgres-db-cert.crt
+      imagePullSecrets:
+      - name: ghcr-creds-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-golang
+spec:
+  selector:
+    app: backend-golang
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3500
