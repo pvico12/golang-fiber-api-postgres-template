@@ -53,6 +53,18 @@ func NewDB() (*DB, error) {
 		ConnMaxLifetime: getEnvAsInt("DB_CONN_MAX_LIFETIME", 300),
 	}
 
+	testing_mode := os.Getenv("TESTING_MODE")
+	if testing_mode == "true" {
+		fmt.Println("Running in testing mode, targeting local database.")
+		cfg.Host = "127.0.0.1"
+		cfg.Port = "31415"
+		cfg.User = "postgres"
+		cfg.Password = "postgres"
+		cfg.Database = "testdb"
+		cfg.SSLMode = ""
+		cfg.SSLRootCert = ""
+	}
+
 	// Validate that all required configuration fields are set
 	if cfg.Host == "" || cfg.Port == "" || cfg.User == "" || cfg.Password == "" || cfg.Database == "" {
 		log.Fatalf("One or more required configuration fields are missing")

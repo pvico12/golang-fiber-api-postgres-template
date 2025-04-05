@@ -24,6 +24,35 @@ func (q *Queries) CreateDefaultUsers(ctx context.Context) error {
 	return err
 }
 
+const getAllTableNames = `-- name: GetAllTableNames :many
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+`
+
+func (q *Queries) GetAllTableNames(ctx context.Context) ([]interface{}, error) {
+	rows, err := q.db.QueryContext(ctx, getAllTableNames)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []interface{}
+	for rows.Next() {
+		var table_name interface{}
+		if err := rows.Scan(&table_name); err != nil {
+			return nil, err
+		}
+		items = append(items, table_name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT name, age
 FROM users
