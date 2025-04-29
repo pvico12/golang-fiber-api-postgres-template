@@ -25,5 +25,9 @@ import (
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
-	SetupApp()
+	// Initialize the app
+	app, dbConn := SetupApp()
+
+	// Start the app asynchronously
+	StartApp(app, dbConn)
 }

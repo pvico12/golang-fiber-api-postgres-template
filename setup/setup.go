@@ -83,12 +83,24 @@ func SetupApp() (*fiber.App, *db.DB) {
 
 func StartApp(app *fiber.App, dbConn *db.DB) {
 	// Start the app asynchronously
-	go func() {
+	fmt.Println("Starting server on port 3500...")
+	testingMode := os.Getenv("TESTING_MODE")
+
+	if testingMode == "true" {
+		// Run asynchronously for testing
+		go func() {
+			defer dbConn.Close()
+			if err := app.Listen(":3500"); err != nil {
+				log.Fatalf("Failed to start the server: %v", err)
+			}
+		}()
+	} else {
+		// Run indefinitely for production
 		defer dbConn.Close()
 		if err := app.Listen(":3500"); err != nil {
 			log.Fatalf("Failed to start the server: %v", err)
 		}
-	}()
+	}
 }
 
 func SwaggerHandler(c *fiber.Ctx) error {
